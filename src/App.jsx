@@ -32,6 +32,7 @@ const COURSES = [
 
 const WDAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday"];
 
+// Notes removed from NAV
 const NAV = [
   { id:"dashboard",   label:"Dashboard",    icon:"▦" },
   { id:"timetable",   label:"Timetable",    icon:"⊞" },
@@ -40,7 +41,6 @@ const NAV = [
   { id:"exams",       label:"Exam Planner", icon:"◈" },
   { id:"revision",    label:"Revision Log", icon:"↺" },
   { id:"projects",    label:"Projects",     icon:"⊙" },
-  { id:"notes",       label:"Notes",        icon:"◉" },
 ];
 
 function useLS(key, init) {
@@ -91,28 +91,17 @@ export default function App() {
   const [dark, setDark] = useLS("fa_dark", false);
   const T = dark ? DK : LT;
 
-  const [assignments, setAssignments] = useLS("fa_asgn2",  []);
-  const [tasks,       setTasks]       = useLS("fa_tasks2", []);
-  const [examPlans,   setExamPlans]   = useLS("fa_expl2",  []);
-  const [examTasks,   setExamTasks]   = useLS("fa_exts2",  []);
-  const [revisions,   setRevisions]   = useLS("fa_revs2",  []);
-  const [projects,    setProjects]    = useLS("fa_proj2",  []);
-  const [noteMeta,    setNoteMeta]    = useLS("fa_nmeta2", []);
-  const [studyLog,    setStudyLog]    = useLS("fa_study2", []);
-  const [dsCount,     setDsCount]     = useLS("fa_dsc2",   0);
-
-  const pdfStore = useRef({});
-  useEffect(() => {
-    try { const r=sessionStorage.getItem("fa_pdfs2"); if(r) pdfStore.current=JSON.parse(r); } catch {}
-  }, []);
-  const savePDF   = (id,url) => { pdfStore.current[id]=url; try{sessionStorage.setItem("fa_pdfs2",JSON.stringify(pdfStore.current));}catch{} };
-  const getPDF    = id => pdfStore.current[id]||null;
-  const deletePDF = id => { delete pdfStore.current[id]; try{sessionStorage.setItem("fa_pdfs2",JSON.stringify(pdfStore.current));}catch{} };
+  const [assignments, setAssignments] = useLS("fa_asgn3",  []);
+  const [tasks,       setTasks]       = useLS("fa_tasks3", []);
+  const [examPlans,   setExamPlans]   = useLS("fa_expl3",  []);
+  const [examTasks,   setExamTasks]   = useLS("fa_exts3",  []);
+  const [revisions,   setRevisions]   = useLS("fa_revs3",  []);
+  const [projects,    setProjects]    = useLS("fa_proj3",  []);
+  const [studyLog,    setStudyLog]    = useLS("fa_study3", []);
 
   const sh = { T, assignments,setAssignments, tasks,setTasks, examPlans,setExamPlans,
     examTasks,setExamTasks, revisions,setRevisions, projects,setProjects,
-    noteMeta,setNoteMeta, studyLog,setStudyLog, dsCount,setDsCount,
-    savePDF,getPDF,deletePDF };
+    studyLog,setStudyLog };
 
   const PAGES = {
     dashboard:   <Dashboard   {...sh} setPage={setPage} />,
@@ -122,7 +111,6 @@ export default function App() {
     exams:       <Exams       {...sh} />,
     revision:    <Revision    {...sh} />,
     projects:    <Projects    {...sh} />,
-    notes:       <Notes       {...sh} />,
   };
 
   const css = `
@@ -199,13 +187,14 @@ function SBar({T,page,setPage,dark,setDark}) {
       </div>
       <div style={{borderTop:`1px solid ${T.border}`,paddingTop:10,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <span style={{fontSize:11,color:T.t4}}>Spring 2026</span>
-        <button onClick={()=>setDark(d=>!d)} style={{background:T.bsBg,border:"none",borderRadius:8,padding:"5px 10px",cursor:"pointer",fontSize:16,color:T.t2}} title="Toggle dark mode">{dark?"☀":"🌙"}</button>
+        <button onClick={()=>setDark(d=>!d)} style={{background:T.bsBg,border:"none",borderRadius:8,padding:"5px 10px",cursor:"pointer",fontSize:16,color:T.t2}}>{dark?"☀":"🌙"}</button>
       </div>
     </div>
   );
 }
 
-function Dashboard({T,assignments,tasks,examPlans,studyLog,setStudyLog,dsCount,setDsCount,setPage}) {
+// ─── DASHBOARD (no DSA counter) ───
+function Dashboard({T,assignments,tasks,examPlans,studyLog,setStudyLog,setPage}) {
   const [logH,setLogH]=useState("");
   const td=isoToday();
   const todayH=studyLog.filter(l=>l.date===td).reduce((a,b)=>a+b.hours,0);
@@ -235,20 +224,20 @@ function Dashboard({T,assignments,tasks,examPlans,studyLog,setStudyLog,dsCount,s
   function log(){const h=parseFloat(logH);if(isNaN(h)||h<=0)return;setStudyLog(p=>[...p,{id:uid(),date:td,hours:h}]);setLogH("");}
   return (
     <div className="scroll">
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:10,marginBottom:18}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10,marginBottom:18}}>
         {[
-          {label:"Today's Study", val:todayH.toFixed(1)+"h", color:"#2563eb"},
-          {label:"Today's Tasks", val:`${doneT}/${todayT.length}`, color:"#059669"},
-          {label:"Assignments",   val:pending, color:"#d97706"},
-          {label:"DSA Solved",    val:dsCount, color:"#7c3aed"},
-          {label:"Exams ≤7d",     val:upExams, color:"#dc2626"},
+          {label:"Today's Study",  val:todayH.toFixed(1)+"h", color:"#2563eb"},
+          {label:"Today's Tasks",  val:`${doneT}/${todayT.length}`, color:"#059669"},
+          {label:"Pending Asgn",   val:pending, color:"#d97706"},
+          {label:"Exams ≤7 days",  val:upExams, color:"#dc2626"},
         ].map(s=>(
           <div key={s.label} className="card" style={{textAlign:"center",padding:"13px 8px"}}>
-            <div style={{fontSize:24,fontWeight:700,color:s.color}}>{s.val}</div>
+            <div style={{fontSize:26,fontWeight:700,color:s.color}}>{s.val}</div>
             <div style={{fontSize:11,color:T.t3,marginTop:3}}>{s.label}</div>
           </div>
         ))}
       </div>
+
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}} className="g2">
         <div className="card">
           <div className="st">Log Study Hours (Today)</div>
@@ -257,90 +246,88 @@ function Dashboard({T,assignments,tasks,examPlans,studyLog,setStudyLog,dsCount,s
             <button className="bp" style={{padding:"9px 14px"}} onClick={log}>Log</button>
           </div>
           <div className="st">This Week</div>
-          {wkDays.length===0?<div style={{fontSize:13,color:T.t4}}>No entries yet</div>:<>
-            {wkDays.map(d=>(
-              <div key={d} style={{display:"flex",justifyContent:"space-between",fontSize:13,color:T.t2,padding:"4px 0",borderBottom:`1px solid ${T.div}`}}>
-                <span>{fmtD(d)}</span><span style={{fontWeight:700,color:T.t1}}>{byDay[d].toFixed(1)}h</span>
-              </div>
-            ))}
-            <div style={{display:"flex",justifyContent:"space-between",marginTop:8,fontSize:12,color:T.t3}}>
-              <span>Total: <b style={{color:T.t1}}>{wkTotal.toFixed(1)}h</b></span>
-              <span>Avg/day: <b style={{color:T.t1}}>{wkAvg}h</b></span>
-            </div>
-          </>}
+          {wkDays.length===0
+            ? <div style={{fontSize:13,color:T.t4}}>No entries yet this week</div>
+            : <>
+                {wkDays.map(d=>(
+                  <div key={d} style={{display:"flex",justifyContent:"space-between",fontSize:13,color:T.t2,padding:"4px 0",borderBottom:`1px solid ${T.div}`}}>
+                    <span>{fmtD(d)}</span><span style={{fontWeight:700,color:T.t1}}>{byDay[d].toFixed(1)}h</span>
+                  </div>
+                ))}
+                <div style={{display:"flex",justifyContent:"space-between",marginTop:8,fontSize:12,color:T.t3}}>
+                  <span>Total: <b style={{color:T.t1}}>{wkTotal.toFixed(1)}h</b></span>
+                  <span>Avg/day: <b style={{color:T.t1}}>{wkAvg}h</b></span>
+                </div>
+              </>
+          }
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
-          <div className="card" style={{textAlign:"center"}}>
-            <div className="st">DSA Progress</div>
-            <div style={{fontSize:38,fontWeight:700,color:"#7c3aed",marginBottom:6}}>{dsCount}</div>
-            <div style={{fontSize:11,color:T.t3,marginBottom:12}}>questions solved</div>
-            <div style={{display:"flex",gap:6,justifyContent:"center"}}>
-              <button className="bs" style={{padding:"6px 14px"}} onClick={()=>setDsCount(c=>Math.max(0,c-1))}>−</button>
-              <button className="bp" style={{padding:"6px 16px"}} onClick={()=>setDsCount(c=>c+1)}>+1</button>
-            </div>
-          </div>
-          {pastWeeks.length>0&&(
+          {pastWeeks.length>0 && (
             <div className="card">
               <div className="st">Weekly History</div>
               {pastWeeks.map(([wk,h])=>(
                 <div key={wk} style={{display:"flex",justifyContent:"space-between",fontSize:12,color:T.t2,padding:"4px 0",borderBottom:`1px solid ${T.div}`}}>
-                  <span>Wk {fmtD(wk)}</span><span style={{fontWeight:700,color:T.t1}}>{h.toFixed(1)}h</span>
+                  <span>Wk of {fmtD(wk)}</span><span style={{fontWeight:700,color:T.t1}}>{h.toFixed(1)}h</span>
                 </div>
               ))}
             </div>
           )}
         </div>
       </div>
+
       <div className="card" style={{marginBottom:14}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
           <div className="st" style={{marginBottom:0}}>Today — {dayName()}</div>
           <button className="bg" onClick={()=>setPage("timetable")}>Full →</button>
         </div>
-        {todayCls.length===0?<div style={{color:T.t4,textAlign:"center",padding:"16px 0",fontSize:14}}>No classes today 🎉</div>:(
-          <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-            {todayCls.map((c,i)=>{
-              const isL=live?.time===c.time&&live?.code===c.code;
-              const isN=!live&&next?.time===c.time&&next?.code===c.code;
-              return (
-                <div key={i} style={{flex:"1 1 148px",background:isL?c.color+"22":T.row,border:`1.5px solid ${isL?c.color:T.border}`,borderRadius:12,padding:"10px 13px"}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-                    <span style={{fontSize:12,fontWeight:700,color:c.color}}>{c.short}</span>
-                    {isL&&<span className="bdg" style={{background:"#dcfce7",color:"#166534",fontSize:10}}>LIVE</span>}
-                    {isN&&<span className="bdg" style={{background:"#fef9c3",color:"#713f12",fontSize:10}}>NEXT</span>}
+        {todayCls.length===0
+          ? <div style={{color:T.t4,textAlign:"center",padding:"16px 0",fontSize:14}}>No classes today 🎉</div>
+          : <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+              {todayCls.map((c,i)=>{
+                const isL=live?.time===c.time&&live?.code===c.code;
+                const isN=!live&&next?.time===c.time&&next?.code===c.code;
+                return (
+                  <div key={i} style={{flex:"1 1 148px",background:isL?c.color+"22":T.row,border:`1.5px solid ${isL?c.color:T.border}`,borderRadius:12,padding:"10px 13px"}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                      <span style={{fontSize:12,fontWeight:700,color:c.color}}>{c.short}</span>
+                      {isL&&<span className="bdg" style={{background:"#dcfce7",color:"#166534",fontSize:10}}>LIVE</span>}
+                      {isN&&<span className="bdg" style={{background:"#fef9c3",color:"#713f12",fontSize:10}}>NEXT</span>}
+                    </div>
+                    <div style={{fontSize:13,fontWeight:700,color:T.t1,marginBottom:2}}>{c.time}</div>
+                    <div style={{fontSize:11,color:T.t3}}>{c.room} · {c.teacher}</div>
                   </div>
-                  <div style={{fontSize:13,fontWeight:700,color:T.t1,marginBottom:2}}>{c.time}</div>
-                  <div style={{fontSize:11,color:T.t3}}>{c.room} · {c.teacher}</div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+        }
       </div>
+
       <div className="card">
         <div className="st">Upcoming Deadlines</div>
-        {deadlines.length===0?<div style={{color:T.t4,textAlign:"center",padding:"14px 0",fontSize:13}}>All clear!</div>:
-          deadlines.map((d,i)=>{
-            const dl=dLeft(d.date);
-            return (
-              <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:`1px solid ${T.div}`}}>
-                <span className="bdg" style={{background:d.c+"18",color:d.c,minWidth:80,justifyContent:"center"}}>{d.type}</span>
-                <span style={{flex:1,fontSize:13,color:T.t1}}>{d.label}</span>
-                <span style={{fontSize:12,fontWeight:700,color:dl<=2?"#ef4444":dl<=5?"#f59e0b":T.t3}}>
-                  {dl==null?"?":dl<0?"Overdue":dl===0?"Today!":dl+"d"}
-                </span>
-              </div>
-            );
-          })
+        {deadlines.length===0
+          ? <div style={{color:T.t4,textAlign:"center",padding:"14px 0",fontSize:13}}>All clear!</div>
+          : deadlines.map((d,i)=>{
+              const dl=dLeft(d.date);
+              return (
+                <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:`1px solid ${T.div}`}}>
+                  <span className="bdg" style={{background:d.c+"18",color:d.c,minWidth:80,justifyContent:"center"}}>{d.type}</span>
+                  <span style={{flex:1,fontSize:13,color:T.t1}}>{d.label}</span>
+                  <span style={{fontSize:12,fontWeight:700,color:dl<=2?"#ef4444":dl<=5?"#f59e0b":T.t3}}>
+                    {dl==null?"?":dl<0?"Overdue":dl===0?"Today!":dl+"d"}
+                  </span>
+                </div>
+              );
+            })
         }
       </div>
     </div>
   );
 }
 
+// ─── TIMETABLE ───
 function Timetable({T}) {
   const [view,setView]=useState("today");
-  const td=dayName();
-  const nm=nowMin();
+  const td=dayName(); const nm=nowMin();
   function status(c) {
     if(c.day!==td) return null;
     if(nm>=tStart(c.time)&&nm<=tEnd(c.time)) return "live";
@@ -355,7 +342,7 @@ function Timetable({T}) {
           <button key={v} className={view===v?"bp":"bs"} style={{fontSize:13}} onClick={()=>setView(v)}>{v==="today"?"Today":"Full Week"}</button>
         ))}
         <div style={{marginLeft:"auto",display:"flex",gap:8}}>
-          <span className="bdg" style={{background:"#dcfce7",color:"#166534"}}>Live</span>
+          <span className="bdg" style={{background:"#dcfce7",color:"#166634"}}>Live</span>
           <span className="bdg" style={{background:"#fef9c3",color:"#713f12"}}>Next</span>
         </div>
       </div>
@@ -413,29 +400,60 @@ function Timetable({T}) {
   );
 }
 
-function Daily({T,tasks,setTasks,examTasks}) {
+// ─── DAILY PLANNER ───
+// Shows: manual tasks, exam planner tasks, assignment chunks, project tasks — all due today
+function Daily({T,tasks,setTasks,examTasks,assignments,setAssignments,projects,setProjects}) {
   const [form,setForm]=useState({title:"",course:"",type:"task"});
   const td=isoToday();
+
+  // manual tasks for today
   const todayT=tasks.filter(t=>t.date===td);
+  // exam tasks due today
   const todayET=(examTasks||[]).filter(t=>t.date===td&&!t.completed);
-  const done=todayT.filter(t=>t.completed).length;
-  const total=todayT.length+todayET.length;
-  const pct=total===0?0:Math.round(done/total*100);
+  // assignment chunks due today
+  const todayChunks=[];
+  (assignments||[]).filter(a=>!a.completed).forEach(a=>{
+    (a.chunks||[]).filter(ch=>ch.date===td&&!ch.completed).forEach(ch=>{
+      todayChunks.push({...ch, assignmentTitle:a.title, course:a.course, assignmentId:a.id});
+    });
+  });
+  // project tasks due today
+  const todayProjTasks=[];
+  (projects||[]).forEach(proj=>{
+    (proj.tasks||[]).filter(t=>t.deadline===td&&!t.completed).forEach(t=>{
+      todayProjTasks.push({...t, projectName:proj.name, course:proj.course, projectId:proj.id});
+    });
+  });
+
+  const doneManual=todayT.filter(t=>t.completed).length;
+  const total=todayT.length+todayET.length+todayChunks.length+todayProjTasks.length;
+  const doneAll=doneManual+todayET.filter(t=>t.completed).length+todayChunks.filter(c=>c.completed).length+todayProjTasks.filter(t=>t.completed).length;
+  const pct=total===0?0:Math.round(doneAll/total*100);
+
   function add(){if(!form.title.trim())return;setTasks(p=>[...p,{...form,id:uid(),completed:false,date:td}]);setForm({title:"",course:"",type:"task"});}
   function toggle(id){setTasks(p=>p.map(t=>t.id===id?{...t,completed:!t.completed}:t));}
   function del(id){setTasks(p=>p.filter(t=>t.id!==id));}
+  function toggleChunk(assignmentId,chunkId){
+    setAssignments(p=>p.map(a=>a.id!==assignmentId?a:{...a,chunks:a.chunks.map(c=>c.id===chunkId?{...c,completed:!c.completed}:c)}));
+  }
+  function toggleProjTask(projectId,taskId){
+    setProjects(p=>p.map(x=>x.id!==projectId?x:{...x,tasks:x.tasks.map(t=>t.id===taskId?{...t,completed:!t.completed}:t)}));
+  }
+
   return (
     <div className="scroll">
       <div className="card" style={{marginBottom:14}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
           <span style={{fontWeight:700,fontSize:15,color:T.t1}}>Today's Progress</span>
-          <span style={{fontSize:13,color:T.t3}}>{done}/{total} · {pct}%</span>
+          <span style={{fontSize:13,color:T.t3}}>{doneAll}/{total} · {pct}%</span>
         </div>
         <div className="pt"><div className="pf" style={{width:pct+"%",background:pct===100?"#059669":T.bpBg}}/></div>
       </div>
+
+      {/* Exam planner tasks due today */}
       {todayET.length>0&&(
-        <div className="card" style={{marginBottom:14,borderLeft:"4px solid #dc2626"}}>
-          <div className="st">From Exam Planner</div>
+        <div className="card" style={{marginBottom:12,borderLeft:"4px solid #dc2626"}}>
+          <div className="st">Exam Planner — Due Today</div>
           {todayET.map((t,i)=>(
             <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0",borderBottom:`1px solid ${T.div}`}}>
               <span className="bdg" style={{background:"#fee2e2",color:"#dc2626"}}>{t.subject}</span>
@@ -444,6 +462,48 @@ function Daily({T,tasks,setTasks,examTasks}) {
           ))}
         </div>
       )}
+
+      {/* Assignment chunks due today */}
+      {todayChunks.length>0&&(
+        <div className="card" style={{marginBottom:12,borderLeft:"4px solid #d97706"}}>
+          <div className="st">Assignment Chunks — Due Today</div>
+          {todayChunks.map((ch,i)=>{
+            const co=COURSES.find(c=>c.short===ch.course);
+            return (
+              <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 0",borderBottom:`1px solid ${T.div}`,opacity:ch.completed?.55:1}}>
+                <input type="checkbox" className="chk" checked={ch.completed} onChange={()=>toggleChunk(ch.assignmentId,ch.id)}/>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:13,color:T.t1,textDecoration:ch.completed?"line-through":"none"}}>{ch.title||"(unlabelled chunk)"}</div>
+                  <div style={{fontSize:11,color:T.t3}}>{ch.assignmentTitle}</div>
+                </div>
+                {co&&<span className="bdg" style={{background:co.color+"20",color:co.color}}>{co.short}</span>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Project tasks due today */}
+      {todayProjTasks.length>0&&(
+        <div className="card" style={{marginBottom:12,borderLeft:"4px solid #7c3aed"}}>
+          <div className="st">Project Tasks — Due Today</div>
+          {todayProjTasks.map((t,i)=>{
+            const co=COURSES.find(c=>c.short===t.course);
+            return (
+              <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 0",borderBottom:`1px solid ${T.div}`,opacity:t.completed?.55:1}}>
+                <input type="checkbox" className="chk" checked={t.completed} onChange={()=>toggleProjTask(t.projectId,t.id)}/>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:13,color:T.t1,textDecoration:t.completed?"line-through":"none"}}>{t.title}</div>
+                  <div style={{fontSize:11,color:T.t3}}>{t.projectName}{t.assignee?" · "+t.assignee:""}</div>
+                </div>
+                {co&&<span className="bdg" style={{background:co.color+"20",color:co.color}}>{co.short}</span>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Add manual task */}
       <div className="card" style={{marginBottom:14}}>
         <div className="st">Add Task</div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
@@ -458,9 +518,11 @@ function Daily({T,tasks,setTasks,examTasks}) {
           <button className="bp" onClick={add}>Add</button>
         </div>
       </div>
+
+      {/* Manual tasks */}
       <div className="card">
-        <div className="st">Tasks — {fmtD(td)}</div>
-        {todayT.length===0&&<div style={{color:T.t4,textAlign:"center",padding:"22px 0",fontSize:14}}>No tasks yet</div>}
+        <div className="st">My Tasks — {fmtD(td)}</div>
+        {todayT.length===0&&<div style={{color:T.t4,textAlign:"center",padding:"22px 0",fontSize:14}}>No manual tasks yet</div>}
         {todayT.map(t=>{
           const co=COURSES.find(c=>c.short===t.course);
           return (
@@ -478,6 +540,8 @@ function Daily({T,tasks,setTasks,examTasks}) {
   );
 }
 
+// ─── ASSIGNMENTS ───
+// Chunks: editable label + manually set deadline
 function Assignments({T,assignments,setAssignments,tasks,setTasks}) {
   const [modal,setModal]=useState(false);
   const [form,setForm]=useState({title:"",course:"",dueDate:"",description:"",chunks:3});
@@ -486,34 +550,37 @@ function Assignments({T,assignments,setAssignments,tasks,setTasks}) {
   function add() {
     if(!form.title||!form.dueDate) return;
     const id=uid();
-    const totalD=Math.max(dLeft(form.dueDate)||7,1);
-    const intv=Math.max(1,Math.floor(totalD/form.chunks));
-    // chunks created with EMPTY titles — user types their own labels (Q1, Q2, etc.)
+    // Create chunks with EMPTY title and EMPTY date — user sets both themselves
     const chunks=Array.from({length:form.chunks},(_,i)=>{
-      const d=new Date(); d.setDate(d.getDate()+intv*(i+1));
-      const date=d.toISOString().slice(0,10);
       const cid=uid();
-      setTasks(p=>[...p,{id:cid,title:"",course:form.course,type:"assignment",date,completed:false}]);
-      return {id:cid,title:"",date,completed:false};
+      // also add to tasks with empty title/date — user will fill in
+      setTasks(p=>[...p,{id:cid,title:"",course:form.course,type:"assignment",date:"",completed:false}]);
+      return {id:cid,title:"",date:"",completed:false};
     });
     setAssignments(p=>[...p,{...form,id,completed:false,chunks,created:isoToday()}]);
     setForm({title:"",course:"",dueDate:"",description:"",chunks:3});
     setModal(false);
   }
 
-  function editLabel(aId,cId,title) {
+  function editLabel(aId,cId,title){
     setAssignments(p=>p.map(a=>a.id!==aId?a:{...a,chunks:a.chunks.map(c=>c.id===cId?{...c,title}:c)}));
     setTasks(p=>p.map(t=>t.id===cId?{...t,title}:t));
+  }
+  function editDate(aId,cId,date){
+    setAssignments(p=>p.map(a=>a.id!==aId?a:{...a,chunks:a.chunks.map(c=>c.id===cId?{...c,date}:c)}));
+    setTasks(p=>p.map(t=>t.id===cId?{...t,date}:t));
   }
   function toggleChunk(aId,cId){setAssignments(p=>p.map(a=>a.id!==aId?a:{...a,chunks:a.chunks.map(c=>c.id===cId?{...c,completed:!c.completed}:c)}));}
 
   const active=assignments.filter(a=>!a.completed);
   const done=assignments.filter(a=>a.completed);
+
   return (
     <div className="scroll">
       <div style={{display:"flex",justifyContent:"flex-end",marginBottom:14}}>
         <button className="bp" onClick={()=>setModal(true)}>+ New Assignment</button>
       </div>
+
       {modal&&(
         <div className="ov" onClick={e=>e.target===e.currentTarget&&setModal(false)}>
           <div className="modal">
@@ -525,12 +592,12 @@ function Assignments({T,assignments,setAssignments,tasks,setTasks}) {
                 {COURSES.map(c=><option key={c.code} value={c.short}>{c.name}</option>)}
               </select>
               <div style={{display:"flex",gap:8}}>
-                <div style={{flex:1}}><label style={{fontSize:12,color:T.t3,display:"block",marginBottom:4}}>Due Date</label><input type="date" value={form.dueDate} onChange={e=>setForm(p=>({...p,dueDate:e.target.value}))}/></div>
+                <div style={{flex:1}}><label style={{fontSize:12,color:T.t3,display:"block",marginBottom:4}}>Overall Due Date</label><input type="date" value={form.dueDate} onChange={e=>setForm(p=>({...p,dueDate:e.target.value}))}/></div>
                 <div style={{width:110}}><label style={{fontSize:12,color:T.t3,display:"block",marginBottom:4}}># Chunks</label><input type="number" min="1" max="14" value={form.chunks} onChange={e=>setForm(p=>({...p,chunks:parseInt(e.target.value)||1}))}/></div>
               </div>
               <textarea placeholder="Notes (optional)" value={form.description} onChange={e=>setForm(p=>({...p,description:e.target.value}))} rows={2}/>
               <div style={{fontSize:12,color:T.t3,background:T.row,padding:10,borderRadius:8,lineHeight:1.5}}>
-                Chunks start empty — type your own labels after creating (e.g. Q1, Q2, Part A…)
+                Each chunk starts blank — you set the label (e.g. Q1, Q2) and deadline yourself.
               </div>
             </div>
             <div style={{display:"flex",gap:8,marginTop:16}}>
@@ -540,6 +607,7 @@ function Assignments({T,assignments,setAssignments,tasks,setTasks}) {
           </div>
         </div>
       )}
+
       <div className="st">Active ({active.length})</div>
       {active.length===0&&<div className="card" style={{textAlign:"center",color:T.t4,padding:"22px 0",marginBottom:14}}>No active assignments</div>}
       <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:22}}>
@@ -561,15 +629,35 @@ function Assignments({T,assignments,setAssignments,tasks,setTasks}) {
                   <div style={{fontSize:12,color:T.t3,marginBottom:6}}>{dc}/{a.chunks.length} chunks · {pct}%</div>
                   <button className="bg" style={{fontSize:12,paddingLeft:0,color:T.t3}} onClick={()=>setExp(exp===a.id?null:a.id)}>{exp===a.id?"▴ Hide chunks":"▾ Show chunks"}</button>
                   {exp===a.id&&(
-                    <div style={{marginTop:10,display:"flex",flexDirection:"column",gap:6}}>
-                      {a.chunks.map((ch,idx)=>(
-                        <div key={ch.id} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",background:ch.completed?T.row:T.bg,borderRadius:8,border:`1px solid ${T.border}`}}>
-                          <input type="checkbox" className="chk" checked={ch.completed} onChange={()=>toggleChunk(a.id,ch.id)}/>
-                          <input value={ch.title} onChange={e=>editLabel(a.id,ch.id,e.target.value)} placeholder={`Label chunk ${idx+1} — e.g. Q${idx+1}`}
-                            style={{flex:1,fontSize:13,padding:"4px 8px",borderRadius:6,textDecoration:ch.completed?"line-through":"none"}}/>
-                          <span style={{fontSize:11,color:T.t4,whiteSpace:"nowrap"}}>{fmtD(ch.date)}</span>
-                        </div>
-                      ))}
+                    <div style={{marginTop:10,display:"flex",flexDirection:"column",gap:7}}>
+                      {a.chunks.map((ch,idx)=>{
+                        const cdl=dLeft(ch.date);
+                        return (
+                          <div key={ch.id} style={{padding:"8px 10px",background:ch.completed?T.row:T.bg,borderRadius:8,border:`1px solid ${T.border}`}}>
+                            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                              <input type="checkbox" className="chk" checked={ch.completed} onChange={()=>toggleChunk(a.id,ch.id)}/>
+                              <input
+                                value={ch.title}
+                                onChange={e=>editLabel(a.id,ch.id,e.target.value)}
+                                placeholder={`Label — e.g. Q${idx+1}`}
+                                style={{flex:1,fontSize:13,padding:"4px 8px",borderRadius:6,textDecoration:ch.completed?"line-through":"none"}}
+                              />
+                            </div>
+                            <div style={{display:"flex",alignItems:"center",gap:8,paddingLeft:24}}>
+                              <label style={{fontSize:11,color:T.t3,whiteSpace:"nowrap"}}>Deadline:</label>
+                              <input
+                                type="date"
+                                value={ch.date||""}
+                                onChange={e=>editDate(a.id,ch.id,e.target.value)}
+                                style={{fontSize:12,padding:"3px 8px",flex:1}}
+                              />
+                              {ch.date&&<span style={{fontSize:11,fontWeight:700,whiteSpace:"nowrap",color:cdl!=null&&cdl<=1?"#ef4444":cdl<=3?"#f59e0b":T.t4}}>
+                                {cdl<0?"Overdue":cdl===0?"Today!":cdl+"d"}
+                              </span>}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -595,6 +683,7 @@ function Assignments({T,assignments,setAssignments,tasks,setTasks}) {
   );
 }
 
+// ─── EXAM PLANNER ───
 function Exams({T,examPlans,setExamPlans,examTasks,setExamTasks}) {
   const [modal,setModal]=useState(false);
   const [form,setForm]=useState({subject:"",date:"",type:"Midterm",topics:""});
@@ -695,46 +784,95 @@ function Exams({T,examPlans,setExamPlans,examTasks,setExamTasks}) {
   );
 }
 
+// ─── REVISION LOG ───
+// User manually sets: topic, course, first revision date, and after each revision sets the NEXT date themselves
 function Revision({T,revisions,setRevisions}) {
-  const [form,setForm]=useState({topic:"",course:""});
+  const [form,setForm]=useState({topic:"",course:"",firstDate:""});
   const [filter,setFilter]=useState("all");
-  function add(){if(!form.topic)return;setRevisions(p=>[...p,{...form,id:uid(),lastDate:isoToday(),nextDate:isoToday(),interval:1,count:0}]);setForm({topic:"",course:""});}
-  function revise(id){setRevisions(p=>p.map(r=>{if(r.id!==id)return r;const steps=[1,3,7,14,30];const ni=steps[Math.min(r.count+1,steps.length-1)];const nd=new Date();nd.setDate(nd.getDate()+ni);return{...r,lastDate:isoToday(),nextDate:nd.toISOString().slice(0,10),interval:ni,count:r.count+1};}));}
-  const list=revisions.filter(r=>{if(filter==="due")return r.nextDate<=isoToday();if(filter==="upcoming")return r.nextDate>isoToday();return true;}).sort((a,b)=>a.nextDate.localeCompare(b.nextDate));
+  const [nextDates,setNextDates]=useState({}); // {revisionId: dateString}
+
+  function add(){
+    if(!form.topic||!form.firstDate) return;
+    setRevisions(p=>[...p,{
+      id:uid(), topic:form.topic, course:form.course,
+      lastDate:"", nextDate:form.firstDate, count:0
+    }]);
+    setForm({topic:"",course:"",firstDate:""});
+  }
+
+  function markRevised(id){
+    const nextDate=nextDates[id];
+    if(!nextDate){alert("Please set the next revision date before marking as revised.");return;}
+    setRevisions(p=>p.map(r=>r.id!==id?r:{
+      ...r, lastDate:isoToday(), nextDate, count:r.count+1
+    }));
+    setNextDates(p=>({...p,[id]:""}));
+  }
+
+  const list=revisions.filter(r=>{
+    if(filter==="due") return r.nextDate<=isoToday();
+    if(filter==="upcoming") return r.nextDate>isoToday();
+    return true;
+  }).sort((a,b)=>a.nextDate.localeCompare(b.nextDate));
+
   return (
     <div className="scroll">
       <div className="card" style={{marginBottom:14}}>
-        <div className="st">Add Topic to Track</div>
+        <div className="st">Add Topic to Revise</div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          <input placeholder="Topic name..." value={form.topic} onChange={e=>setForm(p=>({...p,topic:e.target.value}))} style={{flex:"2 1 150px"}} onKeyDown={e=>e.key==="Enter"&&add()}/>
+          <input placeholder="Topic name..." value={form.topic} onChange={e=>setForm(p=>({...p,topic:e.target.value}))} style={{flex:"2 1 150px"}}/>
           <select value={form.course} onChange={e=>setForm(p=>({...p,course:e.target.value}))} style={{flex:"1 1 100px"}}>
-            <option value="">Course</option>{COURSES.map(c=><option key={c.code} value={c.short}>{c.short}</option>)}
+            <option value="">Course</option>
+            {COURSES.map(c=><option key={c.code} value={c.short}>{c.short}</option>)}
           </select>
-          <button className="bp" onClick={add}>Track</button>
+          <div style={{flex:"1 1 130px"}}>
+            <input type="date" value={form.firstDate} onChange={e=>setForm(p=>({...p,firstDate:e.target.value}))} placeholder="First revision date"/>
+            <div style={{fontSize:10,color:T.t3,marginTop:2}}>First revision date</div>
+          </div>
+          <button className="bp" onClick={add}>Add</button>
         </div>
       </div>
+
       <div style={{display:"flex",gap:8,marginBottom:14}}>
-        {[["all","All"],["due","Due"],["upcoming","Upcoming"]].map(([v,l])=>(
+        {[["all","All"],["due","Due / Today"],["upcoming","Upcoming"]].map(([v,l])=>(
           <button key={v} className={filter===v?"bp":"bs"} style={{fontSize:13}} onClick={()=>setFilter(v)}>{l}</button>
         ))}
       </div>
-      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
         {list.length===0&&<div className="card" style={{textAlign:"center",color:T.t4,padding:"22px 0"}}>No topics tracked yet</div>}
         {list.map(r=>{
           const co=COURSES.find(c=>c.short===r.course);
           const due=r.nextDate<=isoToday();
+          const dl=dLeft(r.nextDate);
           return (
             <div key={r.id} className="card" style={{borderLeft:`4px solid ${due?"#ef4444":"#059669"}`}}>
-              <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-                <div style={{flex:1}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
+              <div style={{display:"flex",alignItems:"flex-start",gap:10,flexWrap:"wrap"}}>
+                <div style={{flex:1,minWidth:160}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:5,flexWrap:"wrap"}}>
                     <span style={{fontWeight:700,fontSize:14,color:T.t1}}>{r.topic}</span>
                     {co&&<span className="bdg" style={{background:co.color+"20",color:co.color}}>{co.short}</span>}
-                    <span className="bdg" style={{background:due?"#fee2e2":"#dcfce7",color:due?"#dc2626":"#166534"}}>{due?"Due!":"In "+dLeft(r.nextDate)+"d"}</span>
+                    <span className="bdg" style={{background:due?"#fee2e2":"#dcfce7",color:due?"#dc2626":"#166534"}}>
+                      {due?"Due today!":dl===1?"Tomorrow":"In "+dl+"d"}
+                    </span>
                   </div>
-                  <div style={{fontSize:11,color:T.t4}}>Revised {r.count}× · Interval: {r.interval}d · Last: {fmtD(r.lastDate)}</div>
+                  <div style={{fontSize:11,color:T.t4}}>
+                    Revised {r.count}× · Next: {fmtD(r.nextDate)}{r.lastDate?" · Last: "+fmtD(r.lastDate):""}
+                  </div>
                 </div>
-                <button className="bp" style={{fontSize:13}} onClick={()=>revise(r.id)}>✓ Revised</button>
+                {/* After marking revised, user picks the NEXT date themselves */}
+                <div style={{display:"flex",flexDirection:"column",gap:6,minWidth:200}}>
+                  <div style={{fontSize:11,color:T.t3}}>Set next revision date:</div>
+                  <div style={{display:"flex",gap:6}}>
+                    <input
+                      type="date"
+                      value={nextDates[r.id]||""}
+                      onChange={e=>setNextDates(p=>({...p,[r.id]:e.target.value}))}
+                      style={{flex:1,fontSize:12,padding:"5px 8px"}}
+                    />
+                    <button className="bp" style={{fontSize:12,padding:"6px 12px"}} onClick={()=>markRevised(r.id)}>✓ Done</button>
+                  </div>
+                </div>
                 <button className="bg" style={{color:"#ef4444"}} onClick={()=>setRevisions(p=>p.filter(x=>x.id!==r.id))}>×</button>
               </div>
             </div>
@@ -745,6 +883,7 @@ function Revision({T,revisions,setRevisions}) {
   );
 }
 
+// ─── PROJECTS ───
 function Projects({T,projects,setProjects}) {
   const [modal,setModal]=useState(false);
   const [form,setForm]=useState({name:"",course:"",deadline:"",members:"",description:""});
@@ -820,7 +959,7 @@ function Projects({T,projects,setProjects}) {
                           <span style={{flex:1,fontSize:13,textDecoration:t.completed?"line-through":"none",color:T.t1,minWidth:80}}>{t.title}</span>
                           {t.assignee&&<span className="bdg" style={{background:"#eff6ff",color:"#2563eb"}}>{t.assignee}</span>}
                           <input type="date" value={t.deadline||""} onChange={e=>editTaskDL(proj.id,t.id,e.target.value)} style={{width:128,fontSize:12,padding:"4px 8px"}}/>
-                          {t.deadline&&<span style={{fontSize:11,fontWeight:700,color:tdl!=null&&tdl<=2?"#ef4444":T.t4,whiteSpace:"nowrap"}}>{tdl<0?"Overdue":tdl===0?"Today":tdl+"d"}</span>}
+                          {t.deadline&&<span style={{fontSize:11,fontWeight:700,color:tdl!=null&&tdl<=1?"#ef4444":T.t4,whiteSpace:"nowrap"}}>{tdl<0?"Overdue":tdl===0?"Today":tdl+"d"}</span>}
                         </div>
                       );
                     })}
@@ -842,162 +981,6 @@ function Projects({T,projects,setProjects}) {
           );
         })}
       </div>
-    </div>
-  );
-}
-
-function Notes({T,noteMeta,setNoteMeta,savePDF,getPDF,deletePDF}) {
-  const [modal,setModal]=useState(false);
-  const [viewing,setViewing]=useState(null);
-  const [form,setForm]=useState({topic:"",course:""});
-  const [fc,setFc]=useState("all");
-  const [search,setSearch]=useState("");
-  const [busy,setBusy]=useState(false);
-  const fileRef=useRef();
-
-  function handleFile(e) {
-    const f=e.target.files[0];
-    if(!f) return;
-    if(f.type!=="application/pdf"){alert("Please select a PDF file.");return;}
-    if(!form.topic){alert("Please enter a topic first.");return;}
-    setBusy(true);
-    const reader=new FileReader();
-    reader.onload=ev=>{
-      const id=uid();
-      savePDF(id,ev.target.result);
-      setNoteMeta(p=>[...p,{id,topic:form.topic,course:form.course,fileName:f.name,lastPage:1,created:isoToday()}]);
-      setForm({topic:"",course:""});
-      setModal(false);
-      setBusy(false);
-    };
-    reader.onerror=()=>{alert("Failed to read file.");setBusy(false);};
-    reader.readAsDataURL(f);
-    e.target.value="";
-  }
-
-  function openNote(meta){
-    const url=getPDF(meta.id);
-    if(!url){alert("PDF not in session memory.\n\nThis happens after a page reload. Please re-upload the file.\n\nTip: use the ⬇ Download button to save PDFs to your device so you never lose them.");return;}
-    setViewing({meta,url});
-  }
-
-  function download(meta){
-    const url=getPDF(meta.id);
-    if(!url){alert("File not in session. Please re-upload.");return;}
-    const a=document.createElement("a");
-    a.href=url; a.download=meta.fileName||meta.topic+".pdf"; a.click();
-  }
-
-  function updateLastPage(id,pg){
-    setNoteMeta(p=>p.map(n=>n.id===id?{...n,lastPage:pg}:n));
-    setViewing(v=>v&&v.meta.id===id?{...v,meta:{...v.meta,lastPage:pg}}:v);
-  }
-
-  function deleteNote(id){deletePDF(id);setNoteMeta(p=>p.filter(n=>n.id!==id));if(viewing?.meta?.id===id)setViewing(null);}
-
-  const filtered=noteMeta.filter(n=>{
-    if(fc!=="all"&&n.course!==fc) return false;
-    if(search){const q=search.toLowerCase();return(n.topic||"").toLowerCase().includes(q)||(n.fileName||"").toLowerCase().includes(q);}
-    return true;
-  });
-  const grouped={};
-  filtered.forEach(n=>{const k=n.course||"General";if(!grouped[k])grouped[k]=[];grouped[k].push(n);});
-
-  return (
-    <div className="scroll">
-      <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
-        <input placeholder="Search topic / filename..." value={search} onChange={e=>setSearch(e.target.value)} style={{flex:"2 1 140px"}}/>
-        <select value={fc} onChange={e=>setFc(e.target.value)} style={{flex:"1 1 110px"}}>
-          <option value="all">All Courses</option>{COURSES.map(c=><option key={c.code} value={c.short}>{c.short}</option>)}
-        </select>
-        <button className="bp" onClick={()=>setModal(true)}>+ Upload PDF</button>
-      </div>
-
-      <div style={{background:T.row,border:`1px solid ${T.border}`,borderRadius:10,padding:"10px 14px",marginBottom:14,fontSize:12,color:T.t3,lineHeight:1.6}}>
-        📌 <b>PDFs stay available while this browser tab is open.</b> After a full reload you need to re-upload.
-        Hit <b>⬇ Download</b> on any note to save it permanently to your device.
-      </div>
-
-      {modal&&(
-        <div className="ov" onClick={e=>e.target===e.currentTarget&&setModal(false)}>
-          <div className="modal">
-            <div style={{fontWeight:700,fontSize:17,marginBottom:18,color:T.t1}}>Upload Notes PDF</div>
-            <div style={{display:"flex",flexDirection:"column",gap:10}}>
-              <select value={form.course} onChange={e=>setForm(p=>({...p,course:e.target.value}))}>
-                <option value="">Select course (optional)</option>{COURSES.map(c=><option key={c.code} value={c.short}>{c.name}</option>)}
-              </select>
-              <input placeholder="Topic — required (e.g. Linked Lists, Week 3)" value={form.topic} onChange={e=>setForm(p=>({...p,topic:e.target.value}))}/>
-              <div style={{background:T.bg,border:`2px dashed ${T.border2}`,borderRadius:10,padding:"22px",textAlign:"center"}}>
-                <div style={{fontSize:13,color:T.t3,marginBottom:12}}>Choose a PDF from your device</div>
-                <button className="bs" onClick={()=>fileRef.current.click()} disabled={busy}>{busy?"Reading…":"Choose PDF"}</button>
-                <input ref={fileRef} type="file" accept="application/pdf" style={{display:"none"}} onChange={handleFile}/>
-              </div>
-            </div>
-            <button className="bs" onClick={()=>setModal(false)} style={{marginTop:14,width:"100%"}}>Cancel</button>
-          </div>
-        </div>
-      )}
-
-      {viewing&&(
-        <div className="ov" onClick={e=>e.target===e.currentTarget&&setViewing(null)}>
-          <div style={{background:T.card,borderRadius:16,width:"96%",maxWidth:860,height:"92vh",display:"flex",flexDirection:"column",overflow:"hidden",border:`1px solid ${T.border}`}} onClick={e=>e.stopPropagation()}>
-            <div style={{padding:"11px 16px",borderBottom:`1px solid ${T.border}`,display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",background:T.hdr}}>
-              <div style={{flex:1,minWidth:120}}>
-                <div style={{fontWeight:700,color:T.t1,fontSize:14}}>{viewing.meta.topic||viewing.meta.fileName}</div>
-                <div style={{fontSize:11,color:T.t3}}>{viewing.meta.course} · {viewing.meta.fileName}</div>
-              </div>
-              <div style={{display:"flex",alignItems:"center",gap:6}}>
-                <label style={{fontSize:12,color:T.t3,whiteSpace:"nowrap"}}>Last page:</label>
-                <input type="number" min="1" value={viewing.meta.lastPage||1} onChange={e=>updateLastPage(viewing.meta.id,parseInt(e.target.value)||1)} style={{width:60,padding:"5px 8px",fontSize:13}}/>
-              </div>
-              <button className="bs" style={{fontSize:12,padding:"6px 12px"}} onClick={()=>download(viewing.meta)}>⬇ Download</button>
-              <button className="bg" style={{fontSize:20,padding:"2px 10px"}} onClick={()=>setViewing(null)}>×</button>
-            </div>
-            <iframe key={viewing.meta.id} src={viewing.url} style={{flex:1,border:"none",width:"100%",background:"#fff"}} title="PDF Viewer"/>
-          </div>
-        </div>
-      )}
-
-      {noteMeta.length===0&&(
-        <div className="card" style={{textAlign:"center",color:T.t4,padding:"40px 20px"}}>
-          <div style={{fontSize:32,marginBottom:10}}>📝</div>
-          Upload your handwritten notes PDFs — organised by course and topic.
-        </div>
-      )}
-
-      {Object.entries(grouped).map(([course,notes])=>{
-        const co=COURSES.find(c=>c.short===course);
-        return (
-          <div key={course} style={{marginBottom:22}}>
-            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-              <div style={{width:9,height:9,borderRadius:"50%",background:co?.color||"#888",flexShrink:0}}/>
-              <span style={{fontWeight:700,fontSize:14,color:T.t1}}>{co?.name||course}</span>
-              <span style={{fontSize:12,color:T.t4}}>{notes.length} file{notes.length!==1?"s":""}</span>
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(185px,1fr))",gap:10}}>
-              {notes.map(n=>{
-                const hasFile=!!getPDF(n.id);
-                return (
-                  <div key={n.id} className="card" style={{cursor:"pointer"}} onClick={()=>openNote(n)}>
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
-                      <span style={{fontSize:26,opacity:hasFile?1:.45}}>{hasFile?"📄":"📂"}</span>
-                      <button className="bg" style={{color:"#ef4444",fontSize:14,padding:"2px 7px"}} onClick={e=>{e.stopPropagation();deleteNote(n.id);}}>×</button>
-                    </div>
-                    <div style={{fontWeight:700,fontSize:14,marginBottom:2,color:T.t1}}>{n.topic||n.fileName}</div>
-                    <div style={{fontSize:11,color:T.t3,marginBottom:6,wordBreak:"break-all"}}>{n.fileName}</div>
-                    <div style={{fontSize:11,color:T.t4,marginBottom:10}}>Last: p.{n.lastPage||1} · {fmtD(n.created)}</div>
-                    {!hasFile&&<div style={{fontSize:11,color:"#f59e0b",fontWeight:700,marginBottom:8}}>⚠ Re-upload needed</div>}
-                    <div style={{display:"flex",gap:6}} onClick={e=>e.stopPropagation()}>
-                      <button className="bs" style={{fontSize:11,padding:"4px 0",flex:1,textAlign:"center"}} onClick={()=>openNote(n)}>{hasFile?"View":"Re-upload"}</button>
-                      {hasFile&&<button className="bs" style={{fontSize:13,padding:"4px 10px"}} onClick={()=>download(n)}>⬇</button>}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
     </div>
   );
 }
